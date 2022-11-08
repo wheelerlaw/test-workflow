@@ -1,0 +1,33 @@
+name: CI
+on:
+  pull_request:
+    branches:
+    - main
+  push:
+    branches:
+    - main
+  workflow_dispatch: {}
+
+jobs:
+  test-job:
+    name: This is a small test job
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Run a Custom Action
+      id: custom-action
+      uses: wheelerlaw/test-action@main
+      with:
+        who-to-greet: Wheeler
+        dummy-secret: ${{ secrets.DUMMY_SECRET }}  # This secret exists in the repository settings and is set to the value "I am a secret"
+
+    - name: Run a Custom Action again
+      uses: wheelerlaw/test-action@main
+      with:
+        who-to-greet: World
+        dummy-secret: ${{ secrets.DUMMY_SECRET }}  # This secret exists in the repository settings and is set to the value "I am a secret"
+
+    - name: Echo outputs from private action
+      run: echo ${{ steps.custom-action.outputs.random-number }}
