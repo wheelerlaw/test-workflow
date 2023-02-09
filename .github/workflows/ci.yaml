@@ -21,6 +21,7 @@ jobs:
     runs-on: ubuntu-22.04
     needs: [job-a]
     steps:
+    - uses: actions/checkout@v3
     - run: |
         job_id="$(gh run view ${{ github.run_id }} --json jobs --jq '.jobs[] | select(.name == "Test `test-prod-workflow` Action") | .databaseId')"
         curl -L -XGET -H "Authorization: Bearer ${{ github.token }}" https://api.github.com/repos/Kong/shared-actions/actions/jobs/11209939269/logs
