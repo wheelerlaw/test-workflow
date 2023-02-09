@@ -16,17 +16,28 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v3
-    - run: for ((i=1; i<=5; i++)); do echo "$(date)"; sleep 1; done
+    - name: A long running job
+      run: for ((i=1; i<=60; i++)); do echo "$(date)"; sleep 1; done
     - run: |
         job_id="$(gh run view ${{ github.run_id }} --json jobs --jq '.jobs[] | select(.name == "Small test job to print something slowly to 60 seconds") | .databaseId')"
-        echo "Workflow ID: ${{ github.run_id }}"
+        prev_step_num="$(gh api -XGET /repos/:owner/:repo/actions/jobs/$job_id --jq '.steps[] | select(.name == "A long running job") | .number')"
+        echo "Workflow run ID: ${{ github.run_id }}"
         echo "Job ID: $job_id"
+        echo "Previous step number: $prev_step_num"
         
-        # This will only produce the startup log that gets printed when the job is waiting for a runner. 
-        gh api -XGET /repos/:owner/:repo/actions/jobs/${job_id}/logs
+        echo "The following will only produce the startup log that gets produced when the job is waiting for a runner to pick it up."
+        gh api -X GET /repos/:owner/:repo/actions/jobs/${job_id}/logs
         
-        # It looks like we should be able to do this!!
-        curl -L -XGET -H "Authorization: Bearer $GITHUB_TOKEN" https://github.com/wheelerlaw/test-workflow/commit/${{github.sha}}/checks/${job_id}/logs/3
+        echo "The following step will produce a "Not found (404)" error:"
+        curl -L -X GET -H "Authorization: Bearer $GITHUB_TOKEN" https://github.com/wheelerlaw/test-workflow/commit/${{github.sha}}/checks/${job_id}/logs/${prev_step_num}
+        echo ""
+        echo "But if you go to https://github.com/wheelerlaw/test-workflow/commit/${{github.sha}}/checks/${job_id}/logs/${prev_step_num}"
+        echo "in your browser (already logged into GitHub), it will show you the logs for the previous step, even before"
+        echo "this job finishes! How wonderful it would be if this was included in the API..."
+        
+        echo "Wait for 60 seconds so you can visit the previous link in your browser"
+        for ((i=1; i<=60; i++)); do echo "$(date)"; sleep 1; done
+        
 
   job-b:
     runs-on: ubuntu-22.04
@@ -35,7 +46,10 @@ jobs:
     - uses: actions/checkout@v3
     - run: |
         job_id="$(gh run view ${{ github.run_id }} --json jobs --jq '.jobs[] | select(.name == "Small test job to print something slowly to 60 seconds") | .databaseId')"
-        echo "Workflow ID: ${{ github.run_id }}"
-        echo "Job ID: $job_id"
-        gh api -XGET /repos/:owner/:repo/actions/jobs/${job_id}/logs
-        # curl -L -XGET -H "Authorization: Bearer ${{ github.token }}" https://api.github.com/repos/wheelerlaw/test-workflow/actions/jobs/${job_id}/logs
+        echo "Workflow run ID: ${{ github.run_id }}"
+        echo "Previous job ID: $job_id"
+        
+        echo "Now that the previous job is finished, we can get the whole job logs. But it would be nice if we
+        echo "could get the logs of just a single step, from within the same job"
+        gh api -X GET /repos/:owner/:repo/actions/jobs/${job_id}/logs
+        # curl -L -X GET -H "Authorization: Bearer ${{ github.token }}" https://api.github.com/repos/wheelerlaw/test-workflow/actions/jobs/${job_id}/logs
