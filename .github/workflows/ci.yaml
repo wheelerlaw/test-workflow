@@ -21,7 +21,12 @@ jobs:
         job_id="$(gh run view ${{ github.run_id }} --json jobs --jq '.jobs[] | select(.name == "Small test job to print something slowly to 60 seconds") | .databaseId')"
         echo "Workflow ID: ${{ github.run_id }}"
         echo "Job ID: $job_id"
+        
+        # This will only produce the startup log that gets printed when the job is waiting for a runner. 
         gh api -XGET /repos/:owner/:repo/actions/jobs/${job_id}/logs
+        
+        # It looks like we should be able to do this!!
+        curl -L -XGET -H "Authorization: Bearer $GITHUB_TOKEN" https://github.com/wheelerlaw/test-workflow/commit/${{github.sha}}/checks/${job_id}/logs/3
 
   job-b:
     runs-on: ubuntu-22.04
@@ -34,6 +39,3 @@ jobs:
         echo "Job ID: $job_id"
         gh api -XGET /repos/:owner/:repo/actions/jobs/${job_id}/logs
         # curl -L -XGET -H "Authorization: Bearer ${{ github.token }}" https://api.github.com/repos/wheelerlaw/test-workflow/actions/jobs/${job_id}/logs
-        
-
-
