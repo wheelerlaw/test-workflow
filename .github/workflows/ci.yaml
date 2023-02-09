@@ -17,6 +17,7 @@ jobs:
 
   job-b:
     runs-on: ubuntu-22.04
+    needs: [job-a]
     steps:
     - run: |
         job_id="$(gh run view ${{ github.run_id }} --json jobs --jq '.jobs[] | select(.name == "Test `test-prod-workflow` Action") | .databaseId')"
