@@ -1,0 +1,26 @@
+name: CI
+on:
+  pull_request:
+    branches:
+    - main
+  push:
+    branches:
+    - main
+  workflow_dispatch: {}
+
+jobs:
+  job-a:
+    name: Small test job to print something slowly to 60 seconds
+    runs-on: ubuntu-20.04
+    steps:
+    - run: for ((i=1; i<=60; i++)); do echo "$(date)"; sleep 1; done
+
+  job-b:
+    runs-on: ubuntu-22.04
+    steps:
+    - run: |
+        job_id="$(gh run view ${{ github.run_id }} --json jobs --jq '.jobs[] | select(.name == "Test `test-prod-workflow` Action") | .databaseId')"
+        curl -L -XGET -H "Authorization: Bearer ${{ github.token }}" https://api.github.com/repos/Kong/shared-actions/actions/jobs/11209939269/logs
+        
+
+
