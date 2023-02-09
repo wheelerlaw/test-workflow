@@ -26,7 +26,8 @@ jobs:
         job_id="$(gh run view ${{ github.run_id }} --json jobs --jq '.jobs[] | select(.name == "Small test job to print something slowly to 60 seconds") | .databaseId')"
         echo "Workflow ID: ${{ github.run_id }}"
         echo "Job ID: $job_id"
-        curl -L -XGET -H "Authorization: Bearer ${{ github.token }}" https://api.github.com/repos/wheelerlaw/test-workflow/actions/jobs/${job_id}/logs
+        gh api -XGET /repos/:owner/:repo/actions/jobs/${job_id}/logs
+        # curl -L -XGET -H "Authorization: Bearer ${{ github.token }}" https://api.github.com/repos/wheelerlaw/test-workflow/actions/jobs/${job_id}/logs
         
 
 
