@@ -24,6 +24,8 @@ jobs:
     - uses: actions/checkout@v3
     - run: |
         job_id="$(gh run view ${{ github.run_id }} --json jobs --jq '.jobs[] | select(.name == "Test `test-prod-workflow` Action") | .databaseId')"
+        echo "Workflow ID: ${{ github.run_id }}"
+        echo "Job ID: $job_id"
         curl -L -XGET -H "Authorization: Bearer ${{ github.token }}" https://api.github.com/repos/wheelerlaw/test-workflow/actions/jobs/11209939269/logs
         
 
