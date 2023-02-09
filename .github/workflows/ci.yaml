@@ -28,7 +28,7 @@ jobs:
         echo "The following will only produce the startup log that gets produced when the job is waiting for a runner to pick it up."
         gh api -X GET /repos/:owner/:repo/actions/jobs/${job_id}/logs
         
-        echo "The following step will produce a "Not found (404)" error:"
+        echo "The following step will produce a \"Not found (404)\" error:"
         curl -L -X GET -H "Authorization: Bearer $GITHUB_TOKEN" https://github.com/wheelerlaw/test-workflow/commit/${{github.sha}}/checks/${job_id}/logs/${prev_step_num}
         echo ""
         echo "But if you go to https://github.com/wheelerlaw/test-workflow/commit/${{github.sha}}/checks/${job_id}/logs/${prev_step_num}"
