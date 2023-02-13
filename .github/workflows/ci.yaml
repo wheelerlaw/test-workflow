@@ -16,6 +16,11 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v3
+
+
+    - name: test commit
+      run: |
+
     - name: A long running job
 
       run: for ((i=1; i<=60; i++)); do echo "$(date)"; sleep 1; done
