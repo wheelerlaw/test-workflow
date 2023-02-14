@@ -17,16 +17,11 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-
-    - name: test commit
-      env:
-        GH_TOKEN: ${{ github.token }}
-      run: |
-        gh api /user
-    - name: A long running job
-
+    - name: A long running step
       run: for ((i=1; i<=60; i++)); do echo "$(date)"; sleep 1; done
-    - run: |
+
+    - name: Get step logs
+      run: |
         job_id="$(gh run view ${{ github.run_id }} --json jobs --jq '.jobs[] | select(.name == "Small test job to print something slowly to 60 seconds") | .databaseId')"
         prev_step_num="$(gh api -XGET /repos/:owner/:repo/actions/jobs/$job_id --jq '.steps[] | select(.name == "A long running job") | .number')"
         echo "Workflow run ID: ${{ github.run_id }}"
@@ -52,7 +47,8 @@ jobs:
     needs: [job-a]
     steps:
     - uses: actions/checkout@v3
-    - run: |
+    - name: Get step logs from previous job
+      run: |
         job_id="$(gh run view ${{ github.run_id }} --json jobs --jq '.jobs[] | select(.name == "Small test job to print something slowly to 60 seconds") | .databaseId')"
         echo "Workflow run ID: ${{ github.run_id }}"
         echo "Previous job ID: $job_id"
