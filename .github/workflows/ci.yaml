@@ -7,6 +7,9 @@ on:
     branches:
     - main
   workflow_dispatch: {}
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 env:
   GITHUB_TOKEN: ${{ github.token }}
 
@@ -17,8 +20,8 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: A long running step
-      run: for ((i=1; i<=60; i++)); do echo "$(date)"; sleep 1; done
+    - name: A step that produces some sort of log
+      run: for ((i=1; i<=60; i++)); do echo "I am a log line produced at $(date)"; sleep 1; done
 
     - name: Get step logs
       run: |
