@@ -37,7 +37,7 @@ jobs:
     - run: |
         check() {
           while true; do
-            gh api /repos/:owner/:repo/commits/${{github.sha}}/check-runs | jq '.check_runs[] | select(.name == "Some long running job")'
+            gh api /repos/wheelerlaw/test-workflow/commits/${{github.sha}}/check-runs | jq '.check_runs[] | select(.name == "Some long running job")'
             sleep 1
           done
         }
