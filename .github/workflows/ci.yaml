@@ -19,6 +19,7 @@ jobs:
     - run: for ((i=1; i<=60; i++)); do echo "I am a log line produced at $(date)"; sleep 1; done
 
   job-b:
+    name: Wait for the long running job
     runs-on: ubuntu-22.04
     steps:
     - name: Wait for check
@@ -28,4 +29,22 @@ jobs:
         token: ${{ secrets.GITHUB_TOKEN }}
         checkName: Some long running job
         ref: ${{ github.sha }}
+
+  job-c:
+    name: Print the checks API output
+    runs-on: ubuntu-22.04
+    steps:
+    - run: |
+        check() {
+          while true; do
+            gh api /repos/:owner/:repo/commits/${{github.sha}}/check-runs | jq '.check_runs[] | select(.name == "Some long running job")'
+            sleep 1
+          done
+        }
+        export -f check
+        trap 'kill -INT -$pid' INT
+        timeout 2m bash -ce 'check' &
+        pid=$!
+        wait $pid
+        
 
