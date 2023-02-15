@@ -12,12 +12,6 @@ env:
   GITHUB_TOKEN: ${{ github.token }}
 
 jobs:
-  job-a:
-    name: Some long running job
-    runs-on: ubuntu-22.04
-    steps:
-    - run: for ((i=1; i<=60; i++)); do echo "I am a log line produced at $(date)"; sleep 1; done
-
   job-b:
     name: Wait for the long running job
     runs-on: ubuntu-22.04
