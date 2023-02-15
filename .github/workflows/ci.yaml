@@ -35,16 +35,10 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - run: |
-        check() {
-          while true; do
-            gh api /repos/wheelerlaw/test-workflow/commits/${{github.sha}}/check-runs | jq '.check_runs[] | select(.name == "Some long running job")'
-            sleep 1
-          done
-        }
-        export -f check
-        trap 'kill -INT -$pid' INT
-        timeout 2m bash -ce 'check' &
-        pid=$!
-        wait $pid
+        set -x
+        for ((i=1; i<=120; i++)); do
+          gh api /repos/wheelerlaw/test-workflow/commits/${{github.sha}}/check-runs | jq '.check_runs[] | select(.name == "Some long running job")'
+          sleep 1
+        done
         
 
