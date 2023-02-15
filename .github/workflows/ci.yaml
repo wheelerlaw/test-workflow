@@ -29,6 +29,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - run: |
+        echo "${{github.sha}}"
         set -x
         for ((i=1; i<=120; i++)); do
           gh api /repos/wheelerlaw/test-workflow/commits/${{github.sha}}/check-runs | jq '.check_runs[] | select(.name == "Some long running job")'
