@@ -1,11 +1,9 @@
 name: CI
 on:
   pull_request:
-    branches:
-    - main
+    branches: [main]
   push:
-    branches:
-    - main
+    branches: [main]
   workflow_dispatch: {}
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -14,49 +12,29 @@ env:
   GITHUB_TOKEN: ${{ github.token }}
 
 jobs:
-  job-a:
-    name: Small test job to print something slowly to 60 seconds
-    runs-on: ubuntu-20.04
-    steps:
-    - uses: actions/checkout@v3
-
-    - name: A step that produces some sort of log
-      run: for ((i=1; i<=60; i++)); do echo "I am a log line produced at $(date)"; sleep 1; done
-
-    - name: Get step logs
-      run: |
-        job_id="$(gh run view ${{ github.run_id }} --json jobs --jq '.jobs[] | select(.name == "Small test job to print something slowly to 60 seconds") | .databaseId')"
-        prev_step_num="$(gh api -XGET /repos/:owner/:repo/actions/jobs/$job_id --jq '.steps[] | select(.name == "A long running job") | .number')"
-        echo "Workflow run ID: ${{ github.run_id }}"
-        echo "Job ID: $job_id"
-        echo "Previous step number: $prev_step_num"
-        
-        echo "The following will only produce the startup log that gets produced when the job is waiting for a runner to pick it up."
-        gh api -X GET /repos/:owner/:repo/actions/jobs/${job_id}/logs
-        
-        echo "The following step will produce a \"Not found (404)\" error:"
-        curl -L -X GET -H "Authorization: Bearer $GITHUB_TOKEN" https://github.com/wheelerlaw/test-workflow/commit/${{github.sha}}/checks/${job_id}/logs/${prev_step_num}
-        echo ""
-        echo "But if you go to https://github.com/wheelerlaw/test-workflow/commit/${{github.sha}}/checks/${job_id}/logs/${prev_step_num}"
-        echo "in your browser (already logged into GitHub), it will show you the logs for the previous step, even before"
-        echo "this job finishes! How wonderful it would be if this was included in the API..."
-        
-        echo "Wait for 60 seconds so you can visit the previous link in your browser"
-        for ((i=1; i<=60; i++)); do echo "$(date)"; sleep 1; done
-        
-
   job-b:
+    name: Wait for the long running job
     runs-on: ubuntu-22.04
-    needs: [job-a]
+    steps:
+    - name: Wait for check
+      uses: fountainhead/action-wait-for-check@v1.1.0
+      id: wait-for-check
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        checkName: Some long running job
+        ref: ${{ github.sha }}
+
+  job-c:
+    name: Print the checks API output
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v3
-    - name: Get step logs from previous job
-      run: |
-        job_id="$(gh run view ${{ github.run_id }} --json jobs --jq '.jobs[] | select(.name == "Small test job to print something slowly to 60 seconds") | .databaseId')"
-        echo "Workflow run ID: ${{ github.run_id }}"
-        echo "Previous job ID: $job_id"
+    - run: |
+        echo "${{github.sha}}"
+        set -x
+        for ((i=1; i<=120; i++)); do
+          gh api /repos/wheelerlaw/test-workflow/commits/${{github.sha}}/check-runs | jq '.check_runs[] | select(.name == "Some long running job")'
+          sleep 1
+        done
         
-        echo "Now that the previous job is finished, we can get the whole job logs. But it would be nice if we
-        echo "could get the logs of just a single step, from within the same job"
-        gh api -X GET /repos/:owner/:repo/actions/jobs/${job_id}/logs
-        # curl -L -X GET -H "Authorization: Bearer ${{ github.token }}" https://api.github.com/repos/wheelerlaw/test-workflow/actions/jobs/${job_id}/logs
+
